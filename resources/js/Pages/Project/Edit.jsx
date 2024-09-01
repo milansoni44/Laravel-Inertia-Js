@@ -1,4 +1,3 @@
-import DangerButton from "@/Components/DangerButton";
 import InputError from "@/Components/InputError";
 import InputLabel from "@/Components/InputLabel";
 import PrimaryButton from "@/Components/PrimaryButton";
@@ -9,19 +8,20 @@ import Authenticated from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import React from "react";
 
-function Create({ auth }) {
+function Edit({ auth, project }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         image: null,
-        name: "",
-        status: "",
-        description: "",
-        due_date: "",
+        name: project.name || "",
+        status: project.status || "",
+        description: project.description || "",
+        due_date: project.due_date || "",
+        _method: "PUT",
     });
 
     const onSubmit = (e) => {
         e.preventDefault();
 
-        post(route("projects.store"));
+        post(route("projects.update", project.id));
     };
 
     const redirectTo = (e) => {
@@ -49,6 +49,14 @@ function Create({ auth }) {
                                 className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg"
                                 onSubmit={onSubmit}
                             >
+                                {project.image_path && (
+                                    <div className="mb-4">
+                                        <img
+                                            src={project.image_path}
+                                            className="w-64"
+                                        />
+                                    </div>
+                                )}
                                 <div>
                                     <InputLabel
                                         htmlFor="project_image_path"
@@ -181,4 +189,4 @@ function Create({ auth }) {
     );
 }
 
-export default Create;
+export default Edit;

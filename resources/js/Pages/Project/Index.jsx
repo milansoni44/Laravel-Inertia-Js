@@ -41,6 +41,14 @@ function Index({ auth, projects, queryParams = null, success }) {
 
         router.get(route("projects.index"), queryParams);
     };
+
+    const deleteProject = (project) => {
+        if (!window.confirm("Are you sure you want to delete the project?")) {
+            return;
+        }
+        router.delete(route("projects.destroy", project.id));
+    };
+
     return (
         <Authenticated
             user={auth.user}
@@ -255,15 +263,14 @@ function Index({ auth, projects, queryParams = null, success }) {
                                                 >
                                                     Edit
                                                 </Link>
-                                                <Link
-                                                    href={route(
-                                                        "projects.destroy",
-                                                        project.id
-                                                    )}
+                                                <button
+                                                    onClick={(e) =>
+                                                        deleteProject(project)
+                                                    }
                                                     className="font-medium text-red-600 dark:text-red-500 hover:underline mx-1"
                                                 >
                                                     Delete
-                                                </Link>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}

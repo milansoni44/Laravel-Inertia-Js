@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Http\Resources\TaskResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
@@ -51,9 +53,14 @@ class ProjectController extends Controller
     {
         $data = $request->validated();
 
+        /** @var \Illuminate\Http\UploadedFile $image */
+        $image = $data['image'] ?? null;
         $data['created_by'] = auth()->user()->id;
         $data['updated_by'] = auth()->user()->id;
 
+        if ($image) {
+            $data['image_path'] = $image->store('project/' . \Illuminate\Support\Str::random(), 'public');
+        }
         Project::create($data);
 
         return to_route('projects.index')->with('success', 'Project was created successfully.');
@@ -95,7 +102,9 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        return inertia('Project/Create');
+        return inertia('Project/Edit', [
+            'project'   => new ProjectResource($project)
+        ]);
     }
 
     /**
@@ -103,7 +112,19 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        //
+        $data = $request->validated();
+        $image = $data['image'] ?? null;
+        $data['updated_by'] = Auth::id();
+        if ($image) {
+            if ($project->image_path) {
+                Storage::disk('public')->deleteDirectory(dirname($project->image_path));
+            }
+            $data['image_path'] = $image->store('project/' . \Illuminate\Support\Str::random(), 'public');
+        }
+        $project->update($data);
+
+        return to_route('projects.index')
+            ->with('success', "Project {$project->name} was updated");
     }
 
     /**
@@ -111,6 +132,12 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        //
+        $name = $project->name;
+        $project->delete();
+        if ($project->image_path) {
+            Storage::disk('public')->deleteDirectory(dirname($project->image_path));
+        }
+        return to_route('projects.index')
+            ->with('success', "Project {$name} was deleted");
     }
 }
